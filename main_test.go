@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 )
@@ -56,7 +57,16 @@ func TestIntegration_InsertAndSelect(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var output bytes.Buffer
 
-			table := newTable()
+			tmpFile, err := os.CreateTemp("", "test_db_*.db")
+			if err != nil {
+				t.Fatalf("failed to create temp file: %v", err)
+			}
+			tmpFileName := tmpFile.Name()
+			tmpFile.Close()
+
+			defer os.Remove(tmpFileName)
+
+			table := dbOpen(tmpFileName)
 
 			runREPL(strings.NewReader(tt.input), &output, table)
 			got := output.String()
